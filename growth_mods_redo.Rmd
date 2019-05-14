@@ -1,0 +1,189 @@
+---
+title: "Appendix C of Brown et al.: Growth models"
+author: "Alissa Brown"
+date: "May 6, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r, include = FALSE}
+x <- c("lme4", "lmerTest", "dplyr", "sjPlot", "gstat", "knitr")
+lapply(x, require, character.only = TRUE)
+
+# Data setup
+dat <- read.csv("even_size_class_data.csv", stringsAsFactors = FALSE)
+growth <- dat[!is.na(dat$shade),]   # only retain rows for saplings that have a shade tolerance value
+growth <- growth[growth$myc=="am" | growth$myc=="ecm", ]  # only keep ecm vs. am saplings
+growth <- growth[!is.na(growth$growth),]  # only retain rows for saplings that have a growth rate
+growth <- growth[growth$growth<=1,]   # remove probable measurement errors
+growth$growth <- ifelse(growth$growth<0, 0, growth$growth)   # convert negative growth rates to "0"
+growth$totBA5 <- growth$BAc5 + growth$BAh5
+growth$totBA10 <- growth$BAc10 + growth$BAh10
+growth$totBA15 <- growth$BAc15 + growth$BAh15
+growth$totBA20 <- growth$BAc20 + growth$BAh20
+growth$totn <- growth$n_con + growth$n_het
+growth$mycF <- as.factor(growth$myc)
+
+scaled_vars <- c("diam1", "n_con", "n_het", "totn", "BAc5", "BAh5", "totBA5", "gap", "shade",
+                 "BAc10", "BAh10", "totBA10", "BAc15", "BAh15", "totBA15",
+                 "BAc20", "BAh20", "totBA20")
+growth[, scaled_vars] <- scale(growth[, scaled_vars])  # scale numeric variables
+```
+
+Starting with 5m spatial scale: Run growth models, perform model selection, summarize results of best-performing model. Repeat for 10m, 15m, and 20m scales. Then evaluate variograms of best-performing models to check for spatial autocorrelation.
+
+### 5m scale
+
+```{r, include = FALSE}
+# run all competing models
+null <- lmer(log(growth+1) ~ diam1 + gap + shade*mycF +
+            (1|plot),
+            REML = FALSE,
+            data = growth)
+bio5 <- update(null, .~. + totn + totBA5)
+bio_ch5 <- update(null, .~. + n_con + n_het + BAc5 + BAh5)
+int5 <- update(null, .~. + totn + shade*totBA5 + mycF*totBA5)
+int_ch5 <- update(null, .~. + n_con + n_het + shade*BAc5 + shade*BAh5 + mycF*BAc5 + mycF*BAh5)
+```
+
+```{r, message = FALSE}
+comp.tab.shade5 <- AIC(null, bio5, bio_ch5, int5, int_ch5)
+comp.tab.shade5$delta_AIC <- comp.tab.shade5$AIC - min(comp.tab.shade5$AIC)
+kable(comp.tab.shade5)
+```
+
+```{r, include = FALSE}
+# Re-run best performing model using REML
+int_ch5.REML <- lmer(log(growth+1) ~ diam1 + gap + shade*mycF +
+                          n_con + n_het + shade*BAc5 + shade*BAh5 + mycF*BAc5 + mycF*BAh5 +
+                          (1|plot),
+                        REML = TRUE,
+                        data = growth)
+```
+
+```{r, message = FALSE}
+# Report model results from best-performing model
+tab_model(int_ch5.REML, pred.labels = c("(Intercept)", "Diameter", "Gaps", "Shade tolerance", "Mycorrhizal type", "n saplings (con)", "n saplings (het)", "BA adults (con)", "BA adults (het)", "Shade : Myc type", "Shade : BA adults (con)", "Shade : BA adults (het)", "Myc : BA adults (con)", "Myc : BA adults (het)"), dv.labels = "Log(sapling growth)", digits = 6, show.icc = FALSE, show.re.var = FALSE, title = "5m scale")
+```
+
+<br>
+<br>
+
+### 10m scale
+
+```{r, include = FALSE}
+# run all competing models
+bio10 <- update(null, .~. + totn + totBA10)
+bio_ch10 <- update(null, .~. + n_con + n_het + BAc10 + BAh10)
+int10 <- update(null, .~. + totn + shade*totBA10 + mycF*totBA10)
+int_ch10 <- update(null, .~. + n_con + n_het + shade*BAc10 + shade*BAh10 + mycF*BAc10 + mycF*BAh10)
+```
+
+```{r, message = FALSE}
+comp.tab.shade10 <- AIC(null, bio10, bio_ch10, int10, int_ch10)
+comp.tab.shade10$delta_AIC <- comp.tab.shade10$AIC - min(comp.tab.shade10$AIC)
+kable(comp.tab.shade10)
+```
+
+```{r, include = FALSE}
+# Re-run best performing model using REML
+int_ch10.REML <- lmer(log(growth+1) ~ diam1 + gap + shade*mycF +
+                          n_con + n_het + shade*BAc5 + shade*BAh5 + mycF*BAc5 + mycF*BAh5 +
+                          (1|plot),
+                        REML = TRUE,
+                        data = growth)
+```
+
+```{r, message = FALSE}
+# Report model results from best-performing model
+tab_model(int_ch10.REML, pred.labels = c("(Intercept)", "Diameter", "Gaps", "Shade tolerance", "Mycorrhizal type", "n saplings (con)", "n saplings (het)", "BA adults (con)", "BA adults (het)", "Shade : Myc type", "Shade : BA adults (con)", "Shade : BA adults (het)", "Myc : BA adults (con)", "Myc : BA adults (het)"), dv.labels = "Log(sapling growth)", digits = 6, show.icc = FALSE, show.re.var = FALSE, title = "10m scale")
+```
+
+<br>
+<br>
+
+### 15m scale
+
+```{r, include = FALSE}
+# run all competing models
+bio15 <- update(null, .~. + totn + totBA15)
+bio_ch15 <- update(null, .~. + n_con + n_het + BAc15 + BAh15)
+int15 <- update(null, .~. + totn + shade*totBA15 + mycF*totBA15)
+int_ch15 <- update(null, .~. + n_con + n_het + shade*BAc15 + shade*BAh15 + mycF*BAc15 + mycF*BAh15)
+```
+
+```{r, message = FALSE}
+comp.tab.shade15 <- AIC(null, bio15, bio_ch15, int15, int_ch15)
+comp.tab.shade15$delta_AIC <- comp.tab.shade15$AIC - min(comp.tab.shade15$AIC)
+kable(comp.tab.shade15)
+```
+
+```{r, include = FALSE}
+# Re-run best performing model using REML
+int_ch15.REML <- lmer(log(growth+1) ~ diam1 + gap + shade*mycF +
+                          n_con + n_het + shade*BAc15 + shade*BAh15 + mycF*BAc15 + mycF*BAh15 +
+                          (1|plot),
+                        REML = TRUE,
+                        data = growth)
+```
+
+```{r, message = FALSE}
+# Report model results from best-performing model
+tab_model(int_ch15.REML, pred.labels = c("(Intercept)", "Diameter", "Gaps", "Shade tolerance", "Mycorrhizal type", "n saplings (con)", "n saplings (het)", "BA adults (con)", "BA adults (het)", "Shade : Myc type", "Shade : BA adults (con)", "Shade : BA adults (het)", "Myc : BA adults (con)", "Myc : BA adults (het)"), dv.labels = "Log(sapling growth)", digits = 6, show.icc = FALSE, show.re.var = FALSE, title = "15m scale")
+```
+
+<br>
+<br>
+
+### 20m scale
+
+```{r, include = FALSE}
+# run all competing models
+bio20 <- update(null, .~. + totn + totBA20)
+bio_ch20 <- update(null, .~. + n_con + n_het + BAc20 + BAh20)
+int20 <- update(null, .~. + totn + shade*totBA20 + mycF*totBA20)
+int_ch20 <- update(null, .~. + n_con + n_het + shade*BAc20 + shade*BAh20 + mycF*BAc20 + mycF*BAh20)
+```
+
+```{r, message = FALSE}
+comp.tab.shade20 <- AIC(null, bio20, bio_ch20, int20, int_ch20)
+comp.tab.shade20$delta_AIC <- comp.tab.shade20$AIC - min(comp.tab.shade20$AIC)
+kable(comp.tab.shade20)
+```
+
+```{r, include = FALSE}
+# Re-run best performing model using REML
+int_ch20.REML <- lmer(log(growth+1) ~ diam1 + gap + shade*mycF +
+                          n_con + n_het + shade*BAc20 + shade*BAh20 + mycF*BAc20 + mycF*BAh20 +
+                          (1|plot),
+                        REML = TRUE,
+                        data = growth)
+```
+
+```{r, message = FALSE}
+# Report model results from best-performing model
+tab_model(int_ch20.REML, pred.labels = c("(Intercept)", "Diameter", "Gaps", "Shade tolerance", "Mycorrhizal type", "n saplings (con)", "n saplings (het)", "BA adults (con)", "BA adults (het)", "Shade : Myc type", "Shade : BA adults (con)", "Shade : BA adults (het)", "Myc : BA adults (con)", "Myc : BA adults (het)"), dv.labels = "Log(sapling growth)", digits = 6, show.icc = FALSE, show.re.var = FALSE, title = "20m scale")
+```
+
+<br>
+<br>
+
+### Testing for spatial autocorrelation
+
+```{r, message = FALSE}
+vgm5 <- variogram(resid(int_ch5.REML)~1, loc= ~X+Y, data=growth)
+plot(vgm5, main="Sapling growth, 5m scale")
+
+vgm10 <- variogram(resid(int_ch10.REML)~1, loc= ~X+Y, data=growth)
+plot(vgm10, main="Sapling growth, 10m scale")
+
+vgm15 <- variogram(resid(int_ch15.REML)~1, loc= ~X+Y, data=growth)
+plot(vgm15, main="Sapling growth, 15m scale")
+
+vgm20 <- variogram(resid(int_ch20.REML)~1, loc= ~X+Y, data=growth)
+plot(vgm20, main="Sapling growth, 20m scale")
+```
+

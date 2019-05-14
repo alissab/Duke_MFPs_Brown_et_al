@@ -1,0 +1,150 @@
+---
+title: "Appendix B of Brown et al.: Survival models"
+author: "Alissa Brown"
+date: "May 7, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r, include = FALSE}
+x <- c("lme4", "lmerTest", "dplyr", "sjPlot", "gstat", "knitr")
+lapply(x, require, character.only = TRUE)
+
+# Data setup
+dat <- read.csv("even_size_class_data.csv", stringsAsFactors = FALSE)
+surv <- dat[!is.na(dat$shade),]
+surv <- surv[surv$myc=="am" | surv$myc=="ecm", ]  # only keep ecm vs. am saplings
+surv$totBA5 <- surv$BAc5 + surv$BAh5
+surv$totBA10 <- surv$BAc10 + surv$BAh10
+surv$totBA15 <- surv$BAc15 + surv$BAh15
+surv$totBA20 <- surv$BAc20 + surv$BAh20
+surv$totn <- surv$n_con + surv$n_het
+surv$mycF <- as.factor(surv$myc)
+
+scaled_vars <- c("diam1", "n_con", "n_het", "totn", "BAc5", "BAh5", "totBA5", "gap", "shade",
+                 "BAc10", "BAh10", "totBA10", "BAc15", "BAh15", "totBA15",
+                 "BAc20", "BAh20", "totBA20")
+surv[, scaled_vars] <- scale(surv[, scaled_vars])  # scale numeric variables
+```
+
+Starting with 5m spatial scale: Run survival models, perform model selection, summarize results of best-performing model. Repeat for 10m, 15m, and 20m scales. Then evaluate variograms of best-performing models to check for spatial autocorrelation.
+
+### 5m scale
+
+```{r, include = FALSE}
+# run all competing models
+s_null <- glmer(surv ~ diam1 + gap + shade*mycF +
+            (1|plot),
+            family = binomial(link = "logit"),
+            data = surv)
+s_bio5 <- update(s_null, .~. + totn + totBA5)
+s_bio_ch5 <- update(s_null, .~. + n_con + n_het + BAc5 + BAh5)
+s_int5 <- update(s_null, .~. + totn + shade*totBA5 + mycF*totBA5)
+s_int_ch5 <- update(s_null, .~. + n_con + n_het + shade*BAc5 + shade*BAh5 + mycF*BAc5 + mycF*BAh5)
+```
+
+```{r, message = FALSE}
+comp.tab.shade5 <- AIC(s_null, s_bio5, s_bio_ch5, s_int5, s_int_ch5)
+comp.tab.shade5$delta_AIC <- comp.tab.shade5$AIC - min(comp.tab.shade5$AIC)
+kable(comp.tab.shade5)
+```
+
+```{r, message = FALSE}
+# Report model results from best-performing model
+tab_model(s_bio_ch5, pred.labels = c("(Intercept)", "Diameter", "Gaps", "Shade tolerance", "Mycorrhizal type", "n saplings (con)", "n saplings (het)", "BA adults (con)", "BA adults (het)", "Shade : Myc type"), dv.labels = "Sapling survival", digits = 6, show.icc = FALSE, show.re.var = FALSE, title = "5m scale")
+```
+
+<br>
+<br>
+
+### 10m scale
+
+```{r, include = FALSE}
+# run all competing models
+s_bio10 <- update(s_null, .~. + totn + totBA10)
+s_bio_ch10 <- update(s_null, .~. + n_con + n_het + BAc10 + BAh10)
+s_int10 <- update(s_null, .~. + totn + shade*totBA10 + mycF*totBA10)
+s_int_ch10 <- update(s_null, .~. + n_con + n_het + shade*BAc10 + shade*BAh10 + mycF*BAc10 + mycF*BAh10)
+```
+
+```{r, message = FALSE}
+comp.tab.shade10 <- AIC(s_null, s_bio10, s_bio_ch10, s_int10, s_int_ch10)
+comp.tab.shade10$delta_AIC <- comp.tab.shade10$AIC - min(comp.tab.shade10$AIC)
+kable(comp.tab.shade10)
+```
+
+```{r, message = FALSE}
+# Report model results from best-performing model
+tab_model(s_bio_ch10, pred.labels = c("(Intercept)", "Diameter", "Gaps", "Shade tolerance", "Mycorrhizal type", "n saplings (con)", "n saplings (het)", "BA adults (con)", "BA adults (het)", "Shade : Myc type"), dv.labels = "Sapling survival", digits = 6, show.icc = FALSE, show.re.var = FALSE, title = "10m scale")
+```
+
+<br>
+<br>
+
+### 15m scale
+
+```{r, include = FALSE}
+# run all competing models
+s_bio15 <- update(s_null, .~. + totn + totBA15)
+s_bio_ch15 <- update(s_null, .~. + n_con + n_het + BAc15 + BAh15)
+s_int15 <- update(s_null, .~. + totn + shade*totBA15 + mycF*totBA15)
+s_int_ch15 <- update(s_null, .~. + n_con + n_het + shade*BAc15 + shade*BAh15 + mycF*BAc15 + mycF*BAh15)
+```
+
+```{r, message = FALSE}
+comp.tab.shade15 <- AIC(s_null, s_bio15, s_bio_ch15, s_int15, s_int_ch15)
+comp.tab.shade15$delta_AIC <- comp.tab.shade15$AIC - min(comp.tab.shade15$AIC)
+kable(comp.tab.shade15)
+```
+
+```{r, message = FALSE}
+# Report model results from best-performing model
+tab_model(s_int_ch15, pred.labels = c("(Intercept)", "Diameter", "Gaps", "Shade tolerance", "Mycorrhizal type", "n saplings (con)", "n saplings (het)", "BA adults (con)", "BA adults (het)", "Shade : Myc type", "Shade : BA adults (con)", "Shade : BA adults (het)", "Myc : BA adults (con)", "Myc : BA adults (het)"), dv.labels = "Sapling survival", digits = 6, show.icc = FALSE, show.re.var = FALSE, title = "15m scale")
+```
+
+<br>
+<br>
+
+### 20m scale
+
+```{r, include = FALSE}
+# run all competing models
+s_bio20 <- update(s_null, .~. + totn + totBA20)
+s_bio_ch20 <- update(s_null, .~. + n_con + n_het + BAc20 + BAh20)
+s_int20 <- update(s_null, .~. + totn + shade*totBA20 + mycF*totBA20)
+s_int_ch20 <- update(s_null, .~. + n_con + n_het + shade*BAc20 + shade*BAh20 + mycF*BAc20 + mycF*BAh20)
+```
+
+```{r, message = FALSE}
+comp.tab.shade20 <- AIC(s_null, s_bio20, s_bio_ch20, s_int20, s_int_ch20)
+comp.tab.shade20$delta_AIC <- comp.tab.shade20$AIC - min(comp.tab.shade20$AIC)
+kable(comp.tab.shade20)
+```
+
+```{r, message = FALSE}
+# Report model results from best-performing model
+tab_model(s_int_ch20, pred.labels = c("(Intercept)", "Diameter", "Gaps", "Shade tolerance", "Mycorrhizal type", "n saplings (con)", "n saplings (het)", "BA adults (con)", "BA adults (het)", "Shade : Myc type", "Shade : BA adults (con)", "Shade : BA adults (het)", "Myc : BA adults (con)", "Myc : BA adults (het)"), dv.labels = "Sapling survival", digits = 6, show.icc = FALSE, show.re.var = FALSE, title = "20m scale")
+```
+
+<br>
+<br>
+
+### Testing for spatial autocorrelation
+
+```{r, message = FALSE}
+vgm5 <- variogram(resid(s_bio_ch5)~1, loc= ~X+Y, data=surv)
+plot(vgm5, main="Sapling survival, 5m scale")
+
+vgm10 <- variogram(resid(s_bio_ch10)~1, loc= ~X+Y, data=surv)
+plot(vgm10, main="Sapling survival, 10m scale")
+
+vgm15 <- variogram(resid(s_int_ch15)~1, loc= ~X+Y, data=surv)
+plot(vgm15, main="Sapling survival, 15m scale")
+
+vgm20 <- variogram(resid(s_int_ch20)~1, loc= ~X+Y, data=surv)
+plot(vgm20, main="Sapling survival, 20m scale")
+```
+
