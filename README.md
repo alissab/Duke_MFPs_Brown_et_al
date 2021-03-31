@@ -1,13 +1,11 @@
 # Duke_MFPs_Brown_et_al
 This repo contains R code used to analyze mapped forest plots in the Duke Forest for A. Brown's PhD dissertation.
 
-### .R files:
-- **data_mgmt** manipulating Duke Forest mapped forest plot (MFP) data in prep for analysis. 
-- **mods_5m** model selection for growth/survival models at 5m spatial scale. 
-- **mods_10m** model selection for growth/survival models at 10m spatial scale. 
-- **mods_15m** model selection for growth/survival models at 15m spatial scale. 
-- **mods_20m** model selection for growth/survival models at 20m spatial scale. 
-- **best_mods** constructs final (best performing) models for all spatial scales; tests for spatial autocorrelation; constructs summary tables. 
+### R code:
+- **Brown_et_al_data_mgmt_even_size_classes** manipulating Duke Forest mapped forest plot (MFP) data in prep for analysis. 
+- **growth_mods_redo** R markdown file. Performs model selection for growth models for all spatial scales; tests for spatial autocorrelation; constructs summary tables of parameter estimates of best fit models.
+- **surv_mods_redo** R markdown file. Performs model selection for survival models for all spatial scales; tests for spatial autocorrelation; constructs summary tables of parameter estimates of best fit models.
+- **plot_results** Code to create 'raw' figures. Some post-processing occurred in Inkscape to create final figures for publication.
 
 ### Background
 
