@@ -1,4 +1,4 @@
-# Duke_MFPs_Brown_et_al
+# Mycorrhizal type and shade tolerance affect conspecific negative density dependence in tree recruitment
 This repo contains R code used to analyze mapped forest plots in the Duke Forest for A. Brown's PhD dissertation.
 
 ### R code:
@@ -11,6 +11,7 @@ This repo contains R code used to analyze mapped forest plots in the Duke Forest
 
 **Brown, AJ, CJ Payne, PS White, and RK Peet. 2019. Shade tolerance and mycorrhizal type may influence sapling susceptibility to conspecific negative density dependence. *Journal of Ecology*  [https://doi.org/10.1111/1365-2745.13237](https://doi.org/10.1111/1365-2745.13237)**
 
+Manuscript abstract:
 The maintenance of tree diversity has been explained by multiple mechanisms. One of the most thoroughly studied is conspecific negative density dependence, in which specialist plant enemies reduce survivorship of seeds, seedlings or saplings located near adult conspecifics. Although there is much support that conspecific negative density dependence occurs in temperate forests, only a subset of the species investigated thus far exhibit this recruitment pattern. It remains unclear what drives differential susceptibility to conspecifics among tree species. Previous investigators have considered shade tolerance and mycorrhizal type (arbuscular mycorrhizal vs. ectomycorrhizal association) as two traits that might explain differential susceptibility to conspecific negative density dependence.
 
 Here, we test whether these two plant traits predict susceptibility of tree saplings to conspecific negative density dependence in a temperate hardwood forest using three responses: spatial point patterns of saplings, sapling growth and sapling survival.
